@@ -30,6 +30,7 @@ const CustomerDetails = () => {
     paymentStats,
     overallStatus,
     statusMessage,
+    adjustedOutstanding,
     loading 
   } = useSelector((state) => state.customers);
 
@@ -61,7 +62,9 @@ const CustomerDetails = () => {
   };
 
   const getCreditStatusColor = () => {
-    const outstanding = salesStats ? salesStats.totalOutstanding : customer.outstandingAmount;
+    // Use adjustedOutstanding if available (includes unallocated payments)
+    const outstanding = adjustedOutstanding !== null ? adjustedOutstanding : 
+                        (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount);
     if (outstanding < 0) return 'text-blue-600'; // Customer has credit
     if (outstanding === 0) return 'text-green-600';
     if (customer.creditLimit > 0 && outstanding > customer.creditLimit) {
@@ -225,21 +228,17 @@ const CustomerDetails = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-500">
-                  {(salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) < 0 ? 'Credit Balance' : 'Outstanding Amount'}
+                  {(adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) < 0 ? 'Credit Balance' : 'Outstanding Amount'}
                 </label>
                 <p className={`mt-1 text-2xl font-bold ${getCreditStatusColor()}`}>
-                  {salesStats ? (
-                    salesStats.totalOutstanding < 0
-                      ? formatCurrency(Math.abs(salesStats.totalOutstanding))
-                      : formatCurrency(salesStats.totalOutstanding || 0)
-                  ) : (
-                    customer.outstandingAmount < 0
-                      ? formatCurrency(Math.abs(customer.outstandingAmount))
-                      : formatCurrency(customer.outstandingAmount || 0)
-                  )}
+                  {formatCurrency(Math.abs(adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) || 0))}
                 </p>
-                {(salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) < 0 && (
-                  <p className="mt-1 text-xs text-gray-500">Customer has overpaid (credit)</p>
+                {(adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) < 0 && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {salesStats?.unallocatedPayments > 0 && (
+                      <>Includes ₹{formatCurrency(salesStats.unallocatedPayments)} unallocated payments</>
+                    )}
+                  </p>
                 )}
               </div>
 
@@ -249,26 +248,26 @@ const CustomerDetails = () => {
                   <p className="mt-1 text-xl font-semibold text-gray-900">
                     {formatCurrency(customer.creditLimit)}
                   </p>
-                  {((salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) > 0) && (
+                  {((adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) > 0) && (
                     <div className="mt-2">
                       <div className="flex justify-between text-xs text-gray-600 mb-1">
                         <span>Credit Used</span>
                         <span>
-                          {(((salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) / customer.creditLimit) * 100).toFixed(0)}%
+                          {(((adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) / customer.creditLimit) * 100).toFixed(0)}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${
-                            (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) > customer.creditLimit
+                            (adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) > customer.creditLimit
                               ? 'bg-red-600'
-                              : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) > customer.creditLimit * 0.8
+                              : (adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) > customer.creditLimit * 0.8
                               ? 'bg-yellow-500'
                               : 'bg-green-500'
                           }`}
                           style={{
                             width: `${Math.min(
-                              ((salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) / customer.creditLimit) * 100,
+                              ((adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) / customer.creditLimit) * 100,
                               100
                             )}%`,
                           }}
@@ -279,13 +278,13 @@ const CustomerDetails = () => {
                 </div>
               )}
 
-              {((salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) > 0) && customer.creditLimit > 0 && ((salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) > customer.creditLimit) && (
+              {((adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) > 0) && customer.creditLimit > 0 && ((adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) > customer.creditLimit) && (
                 <div className="bg-red-50 border border-red-200 rounded-md p-3">
                   <div className="flex">
                     <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
                     <div className="text-sm text-red-700">
                       Customer has exceeded credit limit by{' '}
-                      {formatCurrency((salesStats ? salesStats.totalOutstanding : customer.outstandingAmount) - customer.creditLimit)}
+                      {formatCurrency((adjustedOutstanding !== null ? adjustedOutstanding : (salesStats ? salesStats.totalOutstanding : customer.outstandingAmount)) - customer.creditLimit)}
                     </div>
                   </div>
                 </div>

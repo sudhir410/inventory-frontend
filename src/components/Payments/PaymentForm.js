@@ -162,7 +162,7 @@ const PaymentForm = () => {
     try {
       const paymentData = {
         ...formData,
-        amount: parseFloat(formData.amount),
+        amount: parseFloat(formData.amount) || 0,
         sales: formData.sales.filter(s => s.amount > 0),
       };
 
@@ -176,9 +176,24 @@ const PaymentForm = () => {
       navigate('/payments');
     } catch (error) {
       console.error('Error saving payment:', error);
-      const errorMessage = error.message || `Failed to ${isEdit ? 'update' : 'create'} payment`;
+      
+      // Extract error message from backend
+      let errorMessage = `Failed to ${isEdit ? 'update' : 'create'} payment`;
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.errors && Array.isArray(error.errors)) {
+        // Handle validation errors from backend
+        errorMessage = error.errors.map(e => e.msg || e.message).join(', ');
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast.error(errorMessage);
       setErrors({ submit: errorMessage });
+      
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -227,6 +242,29 @@ const PaymentForm = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Error Display */}
+        {errors.submit && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <X className="h-4 w-4 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{errors.submit}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  type="button"
+                  onClick={() => setErrors(prev => ({ ...prev, submit: '' }))}
+                  className="inline-flex text-red-400 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Payment Information */}
           <div className="bg-white shadow rounded-lg p-6">

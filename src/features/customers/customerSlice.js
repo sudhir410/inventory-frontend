@@ -10,6 +10,7 @@ const initialState = {
   paymentStats: null,
   overallStatus: null,
   statusMessage: null,
+  adjustedOutstanding: null,
   loading: false,
   error: null,
 };
@@ -134,6 +135,7 @@ const customerSlice = createSlice({
         state.paymentStats = action.payload.data.paymentStats || null;
         state.overallStatus = action.payload.data.overallStatus || null;
         state.statusMessage = action.payload.data.statusMessage || null;
+        state.adjustedOutstanding = action.payload.data.adjustedOutstanding || null;
       })
       .addCase(createCustomer.fulfilled, (state, action) => {
         state.customers.push(action.payload.data.customer);

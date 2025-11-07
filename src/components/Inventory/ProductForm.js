@@ -120,10 +120,16 @@ const ProductForm = () => {
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
     if (!formData.category.trim()) newErrors.category = 'Category is required';
     // SKU and prices are now optional
-    if (formData.price.mrp && formData.price.selling && formData.price.mrp <= formData.price.selling) {
+    // Parse numbers for comparison
+    const mrp = parseFloat(formData.price.mrp);
+    const selling = parseFloat(formData.price.selling);
+    const currentStock = parseInt(formData.stock.current);
+    const minimumStock = parseInt(formData.stock.minimum);
+    
+    if (formData.price.mrp && formData.price.selling && mrp <= selling) {
       newErrors['price.mrp'] = 'MRP must be greater than selling price';
     }
-    if (formData.stock.minimum && formData.stock.current < formData.stock.minimum) {
+    if (formData.stock.minimum && formData.stock.current && currentStock < minimumStock) {
       newErrors['stock.current'] = 'Current stock cannot be less than minimum stock';
     }
 

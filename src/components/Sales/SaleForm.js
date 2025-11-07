@@ -273,6 +273,10 @@ const SaleForm = () => {
       const saleData = {
         ...formData,
         items: formData.items.filter(item => item.product),
+        // Convert empty string or invalid values to 0 for numeric fields
+        paid: parseFloat(formData.paid) || 0,
+        discount: parseFloat(formData.discount) || 0,
+        tax: parseFloat(formData.tax) || 0,
       };
 
       if (isEdit) {
@@ -285,9 +289,24 @@ const SaleForm = () => {
       navigate('/sales');
     } catch (error) {
       console.error(`Error ${isEdit ? 'updating' : 'creating'} sale:`, error);
-      const errorMessage = error.message || `Failed to ${isEdit ? 'update' : 'create'} sale`;
+      
+      // Extract error message from backend
+      let errorMessage = `Failed to ${isEdit ? 'update' : 'create'} sale`;
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.errors && Array.isArray(error.errors)) {
+        // Handle validation errors from backend
+        errorMessage = error.errors.map(e => e.msg || e.message).join(', ');
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast.error(errorMessage);
       setErrors({ submit: errorMessage });
+      
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -339,6 +358,29 @@ const SaleForm = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Error Display */}
+        {errors.submit && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <X className="h-4 w-4 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{errors.submit}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  type="button"
+                  onClick={() => setErrors(prev => ({ ...prev, submit: '' }))}
+                  className="inline-flex text-red-400 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Customer Information */}
           <div className="bg-white shadow rounded-lg p-6">

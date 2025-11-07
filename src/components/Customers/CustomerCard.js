@@ -133,6 +133,30 @@ const CustomerCard = ({ customer, onToggleStatus }) => {
             </span>
           </div>
 
+          {customer.unallocatedPayments > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Unallocated Payment:</span>
+              <span className="text-sm font-medium text-blue-600">
+                ₹{customer.unallocatedPayments.toLocaleString()}
+              </span>
+            </div>
+          )}
+
+          {customer.adjustedOutstanding !== undefined && customer.adjustedOutstanding !== customer.outstandingAmount && (
+            <div className="flex items-center justify-between border-t pt-2">
+              <span className="text-sm font-medium text-gray-700">
+                {customer.adjustedOutstanding < 0 ? 'Net Credit:' : 'Net Outstanding:'}
+              </span>
+              <span className={`text-sm font-bold ${
+                customer.adjustedOutstanding < 0 ? 'text-blue-600' : 'text-yellow-600'
+              }`}>
+                {customer.adjustedOutstanding < 0 
+                  ? `-₹${Math.abs(customer.adjustedOutstanding).toLocaleString()}`
+                  : `₹${customer.adjustedOutstanding.toLocaleString()}`}
+              </span>
+            </div>
+          )}
+
           {customer.creditLimit > 0 && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Credit Limit:</span>
