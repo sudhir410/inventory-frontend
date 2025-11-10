@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://ec2-13-201-191-151.ap-south-1.compute.amazonaws.com/api/health',
+  baseURL: process.env.REACT_APP_API_URL || 'http://ec2-13-201-191-151.ap-south-1.compute.amazonaws.com/api/',
   headers: {
     'Content-Type': 'application/json',
   },
